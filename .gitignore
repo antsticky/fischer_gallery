@@ -1,0 +1,11 @@
+# poetry and python package files
+.env
+.venv
+__pycache__
+poetry.lock
+
+# database
+db/data/
+
+# drafts
+drafts/

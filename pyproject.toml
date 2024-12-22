@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "fischer-gallery"
+version = "0.1.0"
+description = ""
+authors = ["Peter"]
+readme = "README.md"
+
+packages = [
+    { include = "api" }
+]
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+
+[virtualenvs]
+in-project = true
+
+[tool.poetry.dependencies]
+python = "^3.12"
+mongoengine = "^0.29.1"
+fastapi = "^0.88.0"
+uvicorn = "^0.22.0"
+pyjwt = "^2.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+api_main = 'api.main:run'
+jwt_main = 'api.fast_jwt_auth:run'
