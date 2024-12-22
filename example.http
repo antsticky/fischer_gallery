@@ -1,0 +1,6 @@
+# echo -n 'testuser1:pwd123' | base64
+
+
+GET http://localhost:5000/api/jwt/
+Authorization: Basic dGVzdHVzZXIxOnB3ZDEyMw==
+
