@@ -23,7 +23,8 @@ app.add_middleware(
 async def home():
     t1 = time()
     return HealthTypeModel(
-        message=f"Up-and-running in the last {human_readable_timedelta(t1-t0)}", uptime=t1 - t0
+        message=f"Up-and-running in the last {human_readable_timedelta(t1-t0)}",
+        uptime=t1 - t0,
     )
 
 
