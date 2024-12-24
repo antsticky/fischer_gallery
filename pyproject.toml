@@ -2,7 +2,7 @@
 name = "fischer-gallery"
 version = "0.1.0"
 description = ""
-authors = ["Peter"]
+authors = ["Peter", "Laci"]
 readme = "README.md"
 
 packages = [
