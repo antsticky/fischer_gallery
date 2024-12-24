@@ -4,3 +4,7 @@
 GET http://localhost:5000/api/jwt/
 Authorization: Basic dGVzdHVzZXIxOnB3ZDEyMw==
 
+###
+
+GET http://localhost:5000/api/jwt/validate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicmVhZCIsImV4cCI6MTczNTAzNzMyMH0.O6vedjTKSrmOtNDhgY6QjTjuVK6SzFH72wBVqpPenso
