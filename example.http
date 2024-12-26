@@ -1,10 +1,15 @@
 # echo -n 'testuser1:pwd123' | base64
 
+@host = http://localhost
+@port = 5000
+@token = "TOKEN"
 
-GET http://localhost:5000/api/jwt/
+###
+
+GET {{host}}:{{port}}/api/jwt/
 Authorization: Basic dGVzdHVzZXIxOnB3ZDEyMw==
 
 ###
 
-GET http://localhost:5000/api/jwt/validate
-Authorization: Bearer <TOKEN>
+GET {{host}}:{{port}}/api/jwt/validate
+Authorization: Bearer {{token}}

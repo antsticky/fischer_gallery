@@ -40,14 +40,14 @@ db.createRole({
         db: process.env.MONGO_DB_NAME,
         collection: "stocks"
       },
-      actions: ["find"]
+      actions: ["find", "insert", "update", "remove"]
     },
     {
       resource: {
         db: process.env.MONGO_DB_NAME,
         collection: "logs"
       },
-      actions: ["find"]
+      actions: ["find", "insert", "update", "remove"]
     }
   ],
   roles: []
