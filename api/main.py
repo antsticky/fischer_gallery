@@ -1,13 +1,13 @@
-from time import time
 import uvicorn
-
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from api.routes.authentication import router as auth_router
-from api.routes.database import router as db_two
+from time import time
 
 from api.datamodels.api_responses import HealthTypeModel
+
+from api.routes.authentication import router as auth_router
+from api.routes.stocks import router as stocks_router
 
 from api.misc.date_converter import human_readable_timedelta
 
@@ -19,8 +19,8 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def home():
+@app.get("/", tags=["Health Probe"])
+async def sane():
     t1 = time()
     return HealthTypeModel(
         message=f"Up-and-running in the last {human_readable_timedelta(t1-t0)}",
@@ -28,8 +28,8 @@ async def home():
     )
 
 
-app.include_router(auth_router, prefix="/api/jwt")
-app.include_router(db_two, prefix="/api")
+app.include_router(auth_router, prefix="/api/jwt", tags=["Authentication"])
+app.include_router(stocks_router, prefix="/api", tags=["Stocks"])
 
 
 def run():
