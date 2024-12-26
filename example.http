@@ -2,7 +2,7 @@
 
 @host = http://localhost
 @port = 5000
-@token = "TOKEN"
+@token = <TOKEN>
 
 ###
 
