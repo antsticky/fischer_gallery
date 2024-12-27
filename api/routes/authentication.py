@@ -2,16 +2,16 @@ import os
 import jwt
 from datetime import datetime, timedelta, timezone
 
-
 from fastapi import APIRouter
 from fastapi.security import (
     HTTPBasic,
     HTTPBearer,
 )
 
-
 from fastapi import Depends
 from dotenv import load_dotenv
+
+from typing import Dict
 
 from api.datamodels.api_responses import GetTokenTypeModel, ValidateTokenTypeModel
 from api.middlewares.jwt_auth import get_user_role, get_jwt_payload_dependency
@@ -45,6 +45,6 @@ def get_jwt_token(user_role: str = Depends(get_user_role)) -> GetTokenTypeModel:
 
 @router.get("/validate")
 async def get_jwt_payload(
-    payload: dict = Depends(get_jwt_payload_dependency),
+    payload: Dict = Depends(get_jwt_payload_dependency),
 ) -> ValidateTokenTypeModel:
     return ValidateTokenTypeModel(message="Token is valid", payload=payload)

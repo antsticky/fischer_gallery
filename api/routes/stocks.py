@@ -1,9 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.security import HTTPBearer
 
-
 from dotenv import load_dotenv
 
+from typing import Dict
 
 from api.datamodels.api_inputs import InputAddStockModel
 from api.datamodels.api_responses import InsertTypeModel, UniqueValuesHeaderTypeModel
@@ -22,7 +22,7 @@ bearer = HTTPBearer()
 async def add_stock(
     input: InputAddStockModel = Depends(),
     stock_img: UploadFile = File(...),
-    payload: dict = Depends(get_jwt_payload_dependency),
+    payload: Dict = Depends(get_jwt_payload_dependency),
 ) -> InsertTypeModel:
     if "write" not in payload.get("role"):
         raise HTTPException(status_code=401, detail="No write permission")
@@ -47,7 +47,7 @@ async def add_stock(
 @router.get("/stock/headers")
 async def get_header_names(
     name: str,
-    _: dict = Depends(get_jwt_payload_dependency),
+    _: Dict = Depends(get_jwt_payload_dependency),
 ) -> UniqueValuesHeaderTypeModel:
 
     db = get_read_write_stockdb()
