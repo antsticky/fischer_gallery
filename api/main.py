@@ -4,23 +4,28 @@ from starlette.middleware.cors import CORSMiddleware
 
 from time import time
 
+
 from api.datamodels.api_responses import HealthTypeModel
+
+from api.misc.date_converter import human_readable_timedelta
 
 from api.routes.authentication import router as auth_router
 from api.routes.stocks import router as stocks_router
 
-from api.misc.date_converter import human_readable_timedelta
 
 t0 = time()
 
 app = FastAPI()
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
 @app.get("/", tags=["Health Probe"])
-async def sane():
+async def health() -> HealthTypeModel:
     t1 = time()
     return HealthTypeModel(
         message=f"Up-and-running in the last {human_readable_timedelta(t1-t0)}",

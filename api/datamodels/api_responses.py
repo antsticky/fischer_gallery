@@ -1,6 +1,23 @@
 from pydantic import BaseModel
 
+from api.datamodels.token import TokenPayloadTypeModel
 
-class HealthTypeModel(BaseModel):
+
+class BaseResponseTypeModel(BaseModel):
     message: str
+
+
+class HealthTypeModel(BaseResponseTypeModel):
     uptime: float
+
+
+class InsertTypeModel(BaseResponseTypeModel):
+    object_id: str
+
+
+class GetTokenTypeModel(BaseResponseTypeModel):
+    token: str
+
+
+class ValidateTokenTypeModel(BaseResponseTypeModel):
+    payload: TokenPayloadTypeModel
