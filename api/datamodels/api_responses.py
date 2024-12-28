@@ -21,3 +21,7 @@ class GetTokenTypeModel(BaseResponseTypeModel):
 
 class ValidateTokenTypeModel(BaseResponseTypeModel):
     payload: TokenPayloadTypeModel
+
+
+class UniqueValuesHeaderTypeModel(BaseResponseTypeModel):
+    unique_values: list

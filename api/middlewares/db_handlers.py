@@ -29,5 +29,17 @@ mongo_read_write_stockdb_client = MongoClient(
 )
 
 
-def get_read_stockdb() -> database.Database:
+def get_read_write_stockdb() -> database.Database:
     return mongo_read_write_stockdb_client[os.getenv("MONGO_DB_NAME")]
+
+
+mongo_read_stockdb_client = MongoClient(
+    os.getenv("MONGO_URI_READ"),
+    username=os.getenv("MONGO_READ_USER"),
+    password=os.getenv("MONGO_READ_PASSWORD"),
+    authSource=os.getenv("MONGO_DB_NAME"),
+)
+
+
+def get_read_stockdb() -> database.Database:
+    return mongo_read_stockdb_client[os.getenv("MONGO_DB_NAME")]
