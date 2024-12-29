@@ -20,7 +20,7 @@ bearer = HTTPBearer()
 
 
 @router.get("/")
-async def get_header_names(
+async def get_stocks(
     _: Dict = Depends(get_jwt_payload_dependency),
 ):
     try:
@@ -61,7 +61,7 @@ async def add_stock(
 
 
 @router.get("/{column_name}/unique_values")
-async def get_header_names(
+async def get_unique_names(
     name_name: str,
     _: Dict = Depends(get_jwt_payload_dependency),
 ) -> UniqueValuesHeaderTypeModel:
