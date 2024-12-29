@@ -24,7 +24,8 @@ class InputAddStockModel(BaseModel):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot start or end name or artist field with *",
             )
-        return value
+
+        return " ".join([word.capitalize() for word in value.split(" ")])
 
     @field_validator("year")
     @classmethod
