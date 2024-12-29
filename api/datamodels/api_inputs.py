@@ -1,7 +1,8 @@
+from typing_extensions import Self
 from fastapi import HTTPException, status
 
-from pydantic import BaseModel
-from typing import Optional, Literal, Optional
+from pydantic import BaseModel, field_validator, model_validator
+from typing import Optional, Literal, Optional, List
 
 
 class InputAddStockModel(BaseModel):
@@ -10,14 +11,33 @@ class InputAddStockModel(BaseModel):
 
     artist: str
 
-    year: int
     period_type: Literal["0", "1", "2"]
+    year: List[int] | int
 
     style: Optional[str] = None
     price: Optional[float] = None
 
+    @field_validator("year")
+    @classmethod
+    def validate_year(cls, year: List[int] | int, values) -> List[int] | int:
+        if isinstance(year, list) and (values.data["period_type"] != "0"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Multiple year value permitted only for period_type = 0",
+            )
+
+        if len(year) == 1:
+            return year[0]
+        elif len(year) == 2:
+            return year
+
+        raise ValueError("Year must be either 1 or 2 length")
+
     @property
     def start_year(self) -> int:
+        if isinstance(self.year, list):
+            return self.year[0]
+
         if self.period_type == "0":
             return self.year
 
@@ -34,6 +54,9 @@ class InputAddStockModel(BaseModel):
 
     @property
     def end_year(self) -> int:
+        if isinstance(self.year, list):
+            return self.year[1]
+
         if self.period_type == "0":
             return self.year
 

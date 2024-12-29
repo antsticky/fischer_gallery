@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 
 
-from fastapi import UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException, status
 
 
 ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif"]
