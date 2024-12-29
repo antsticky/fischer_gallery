@@ -1,7 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Query, HTTPException, Depends
 from fastapi.security import HTTPBearer
 
-from bson.json_util import dumps
 from dotenv import load_dotenv
 
 from typing import Dict, Annotated
@@ -20,7 +19,21 @@ router = APIRouter()
 bearer = HTTPBearer()
 
 
-@router.post("/stock")
+@router.get("/")
+async def get_header_names(
+    _: Dict = Depends(get_jwt_payload_dependency),
+):
+    try:
+        db = get_read_write_stockdb()
+        collection = db["stocks"]
+
+        stocks = [flatten_object_id(doc) for doc in collection.find({})]
+        return {"stocks": stocks}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/")
 async def add_stock(
     input: Annotated[InputAddStockModel, Query()],
     stock_img: UploadFile = File(...),
@@ -47,31 +60,17 @@ async def add_stock(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/stock/headers")
+@router.get("/{column_name}/unique_values")
 async def get_header_names(
-    name: str,
+    name_name: str,
     _: Dict = Depends(get_jwt_payload_dependency),
 ) -> UniqueValuesHeaderTypeModel:
     try:
         db = get_read_write_stockdb()
         collection = db["stocks"]
         return UniqueValuesHeaderTypeModel(
-            message=f"Uniques values for column {name}",
-            unique_values=collection.distinct(name),
+            message=f"Uniques values for column {name_name}",
+            unique_values=collection.distinct(name_name),
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/stock")
-async def get_header_names(
-    _: Dict = Depends(get_jwt_payload_dependency),
-):
-    try:
-        db = get_read_write_stockdb()
-        collection = db["stocks"]
-
-        stocks = [flatten_object_id(doc) for doc in collection.find({})]
-        return {"stocks": stocks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

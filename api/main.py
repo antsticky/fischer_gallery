@@ -34,7 +34,7 @@ async def health() -> HealthTypeModel:
 
 
 app.include_router(auth_router, prefix="/api/jwt", tags=["Authentication"])
-app.include_router(stocks_router, prefix="/api", tags=["Stocks"])
+app.include_router(stocks_router, prefix="/api/stocks", tags=["Stocks"])
 
 
 def run():

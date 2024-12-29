@@ -22,16 +22,25 @@ class InputAddStockModel(BaseModel):
         if isinstance(year, list) and (values.data["period_type"] != "0"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Multiple year value permitted only for period_type = 0",
+                detail="Multiple year value permitted only for period_type = 0",
             )
 
         if len(year) == 1:
             return year[0]
-        elif len(year) == 2:
-            return year
-
-        raise ValueError("Year must be either 1 or 2 length")
-
+        
+        
+        if len(year) != 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Year must be either 1 or 2 length",
+            )
+        
+        if year[0] > year[1]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"From year must be smaller then the end year but {year} was given",
+            )
+            
     @property
     def start_year(self) -> int:
         if isinstance(self.year, list):
