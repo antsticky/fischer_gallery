@@ -74,6 +74,9 @@ async def get_unique_names(
         collection = db["stocks"]
         return UniqueValuesHeaderTypeModel(
             # TODO: mongo splits the value by spaces -– escape it at upload time and modify the search accordingly
+            # pipeline = [ {"$match": query}, 
+            # {"$group": {"_id": None, "distinct_values": {"$addToSet": "$name"}}}
+            # ]
             message=f"Uniques values for column {column_name}",
             unique_values=collection.distinct(column_name, query),
         )
