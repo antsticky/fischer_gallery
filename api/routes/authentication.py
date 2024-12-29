@@ -44,7 +44,7 @@ def get_jwt_token(user_role: str = Depends(get_user_role)) -> GetTokenTypeModel:
 
 
 @router.get("/validate")
-async def get_jwt_payload(
+async def validate_jwt(
     payload: Dict = Depends(get_jwt_payload_dependency),
 ) -> ValidateTokenTypeModel:
     return ValidateTokenTypeModel(message="Token is valid", payload=payload)
