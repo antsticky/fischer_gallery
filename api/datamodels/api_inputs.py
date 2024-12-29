@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator
 from typing import Optional, Literal, Optional, List
 
 
@@ -96,3 +96,57 @@ class InputAddStockModel(BaseModel):
             "end_year": self.end_year,
         }
         return {**original_dict, **additional_properties}
+
+
+class ExactMatchQueryTypeModel(BaseModel):
+    value: str
+
+    def query(self, field_name):
+        return {field_name: self.value}
+
+
+class PatternMatchQueryTypeModel(BaseModel):
+    value: str
+
+    def query(self, field_name):
+        if "*" not in [self.value[0], self.value[-1]]:
+            return {field_name: self.value}
+        if self.value[0] == "*" and self.value[-1] == "*":
+            return {field_name: {"$regex": f".*{self.value[1:-1]}.*"}}
+        if self.value[0] == "*":
+            return {field_name: {"$regex": f".*{self.value[1:]}"}}
+        if self.value[-1] == "*":
+            return {field_name: {"$regex": f"^{self.value[:-1]}.*"}}
+
+
+class IntervalMatchQueryTypeModel(BaseModel):
+    value: list[float] | int
+
+    @property
+    def from_value(self):
+        return self.value[0] if isinstance(self.value, list) else self.value
+
+    @property
+    def to_value(self):
+        return self.value[1] if isinstance(self.value, list) else self.value
+
+    def query(self, field_name):
+        if self.to_value == -1 and self.from_value == -1:
+            return {}
+        if self.to_value == -1:
+            return {field_name: {"$gte": self.from_value}}
+        if self.from_value == -1:
+            return {field_name: {"$lte": self.from_value}}
+
+        return {field_name: {"$in": [self.from_value, self.to_value]}}
+
+
+class StockQueryTypeModel(BaseModel):
+    name: Optional[PatternMatchQueryTypeModel] = None
+    artist: Optional[PatternMatchQueryTypeModel] = None
+
+    stock_type: Optional[ExactMatchQueryTypeModel] = None
+    style: Optional[ExactMatchQueryTypeModel] = None
+
+    year: Optional[IntervalMatchQueryTypeModel] = None
+    price: Optional[IntervalMatchQueryTypeModel] = None
