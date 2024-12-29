@@ -1,4 +1,3 @@
-from typing_extensions import Self
 from fastapi import HTTPException, status
 
 from pydantic import BaseModel, field_validator, model_validator
