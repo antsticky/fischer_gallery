@@ -1,17 +1,17 @@
-from fastapi import APIRouter, UploadFile, File, Query, HTTPException, Depends
+from typing import Annotated, Dict
 from fastapi.security import HTTPBearer
+from fastapi import APIRouter, UploadFile, HTTPException, Depends, File, Query
 
 from dotenv import load_dotenv
 
-from typing import Dict, Annotated
 
+from api.misc.file_handler import FileHandler
 from api.datamodels.api_inputs import InputAddStockModel
 from api.datamodels.api_responses import InsertTypeModel, UniqueValuesHeaderTypeModel
-from api.misc.file_handler import FileHandler
 
+from api.misc.json_converter import flatten_object_id
 from api.middlewares.db_handlers import get_read_write_stockdb
 from api.middlewares.jwt_auth import get_jwt_payload_dependency
-from api.misc.json_converter import flatten_object_id
 
 load_dotenv()
 

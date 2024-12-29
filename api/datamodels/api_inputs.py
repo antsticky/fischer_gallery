@@ -16,6 +16,16 @@ class InputAddStockModel(BaseModel):
     style: Optional[str] = None
     price: Optional[float] = None
 
+    @field_validator("name", "artist")
+    @classmethod
+    def string_validator(cls, value: str) -> str:
+        if value.startswith("*") or value.endswith("*"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot start or end name or artist field with *",
+            )
+        return value
+
     @field_validator("year")
     @classmethod
     def validate_year(cls, year: List[int] | int, values) -> List[int] | int:
@@ -27,20 +37,19 @@ class InputAddStockModel(BaseModel):
 
         if len(year) == 1:
             return year[0]
-        
-        
+
         if len(year) != 2:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Year must be either 1 or 2 length",
             )
-        
+
         if year[0] > year[1]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"From year must be smaller then the end year but {year} was given",
             )
-            
+
     @property
     def start_year(self) -> int:
         if isinstance(self.year, list):
