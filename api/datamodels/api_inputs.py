@@ -159,3 +159,11 @@ class PaginationTypeBaseModel(BaseModel):
     @property
     def skip(self) -> int:
         return (self.page - 1) * self.per_page
+
+    @property
+    def start_index(self) -> int:
+        return self.skip
+
+    @property
+    def end_index(self) -> int:
+        return self.start_index + self.per_page

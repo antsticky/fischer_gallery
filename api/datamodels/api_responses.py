@@ -25,3 +25,4 @@ class ValidateTokenTypeModel(BaseResponseTypeModel):
 
 class UniqueValuesHeaderTypeModel(BaseResponseTypeModel):
     unique_values: list
+    count: int
