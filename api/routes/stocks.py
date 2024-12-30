@@ -33,7 +33,7 @@ bearer = HTTPBearer()
 async def get_stocks(
     query: StockQueryTypeModel = Depends(get_prepared_query),
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
-    # _: Dict = Depends(get_jwt_payload_dependency),
+    _: Dict = Depends(get_jwt_payload_dependency),
 ) -> GetAllStocksTypeModel:
     try:
         db = get_read_write_stockdb()

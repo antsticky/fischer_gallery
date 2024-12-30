@@ -24,17 +24,15 @@ class ValidateTokenTypeModel(BaseResponseTypeModel):
     payload: TokenPayloadTypeModel
 
 
-class UniqueValuesHeaderTypeModel(BaseResponseTypeModel):
+class PaginationResponseTypeModel(BaseModel):
+    page: int
+    per_page: int
+    count: int
+
+
+class UniqueValuesHeaderTypeModel(BaseResponseTypeModel, PaginationResponseTypeModel):
     unique_values: list
 
-    page: int
-    per_page: int
-    count: int
 
-
-class GetAllStocksTypeModel(BaseResponseTypeModel):
+class GetAllStocksTypeModel(BaseResponseTypeModel, PaginationResponseTypeModel):
     stocks: List[Dict]
-
-    page: int
-    per_page: int
-    count: int
