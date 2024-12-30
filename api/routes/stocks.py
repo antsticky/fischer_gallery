@@ -35,13 +35,21 @@ async def get_stocks(
         db = get_read_write_stockdb()
         collection = db["stocks"]
 
+        total_count = collection.count_documents(query)
+
         stocks = [
             flatten_object_id(doc)
             for doc in collection.find(query)
             .skip(pagination.skip)
             .limit(pagination.per_page)
         ]
-        return {"stocks": stocks}
+
+        return {
+            "stocks": stocks,
+            "count": total_count,
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -93,6 +101,8 @@ async def get_unique_names(
             # ]
             message=f"Uniques values for column {column_name}",
             unique_values=unique_values[pagination.start_index : pagination.end_index],
+            page=pagination.page,
+            per_page=pagination.per_page,
             count=len(unique_values),
         )
     except Exception as e:

@@ -25,4 +25,7 @@ class ValidateTokenTypeModel(BaseResponseTypeModel):
 
 class UniqueValuesHeaderTypeModel(BaseResponseTypeModel):
     unique_values: list
+
+    page: int
+    per_page: int
     count: int
