@@ -7,16 +7,7 @@ const rootElement = document.getElementById("root");
 
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <BrowserRouter
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
-    >
-      <AppRoutes />
-    </BrowserRouter>
-  );
+  root.render(<AppRoutes />);
 } else {
   console.error("Could not find root element to mount to!");
 }
