@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 from api.misc.file_handler import FileHandler
-from api.datamodels.api_responses import InsertTypeModel, UniqueValuesHeaderTypeModel
+from api.datamodels.api_responses import InsertTypeModel, UniqueValuesHeaderTypeModel, GetAllStocksTypeModel
 from api.datamodels.api_inputs import (
     InputAddStockModel,
     StockQueryTypeModel,
@@ -29,8 +29,8 @@ bearer = HTTPBearer()
 async def get_stocks(
     query: StockQueryTypeModel = Depends(get_prepared_query),
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
-    _: Dict = Depends(get_jwt_payload_dependency),
-):
+    #_: Dict = Depends(get_jwt_payload_dependency),
+) -> GetAllStocksTypeModel:
     try:
         db = get_read_write_stockdb()
         collection = db["stocks"]
@@ -44,12 +44,13 @@ async def get_stocks(
             .limit(pagination.per_page)
         ]
 
-        return {
-            "stocks": stocks,
-            "count": total_count,
-            "page": pagination.page,
-            "per_page": pagination.per_page,
-        }
+        return GetAllStocksTypeModel(
+            message=f"Stocks for query: {query}",
+            stocks= stocks,
+            count= total_count,
+            page= pagination.page,
+            per_page= pagination.per_page,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

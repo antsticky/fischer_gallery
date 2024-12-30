@@ -1,3 +1,4 @@
+from typing import List, Dict
 from pydantic import BaseModel
 
 from api.datamodels.token import TokenPayloadTypeModel
@@ -26,6 +27,13 @@ class ValidateTokenTypeModel(BaseResponseTypeModel):
 class UniqueValuesHeaderTypeModel(BaseResponseTypeModel):
     unique_values: list
 
+    page: int
+    per_page: int
+    count: int
+
+class GetAllStocksTypeModel(BaseResponseTypeModel):
+    stocks: List[Dict]
+    
     page: int
     per_page: int
     count: int
