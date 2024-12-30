@@ -10,9 +10,9 @@ from api.datamodels.api_inputs import InputAddStockModel, StockQueryTypeModel
 from api.datamodels.api_responses import InsertTypeModel, UniqueValuesHeaderTypeModel
 
 from api.misc.json_converter import flatten_object_id
-from api.middlewares.query_builder import get_prepared_query
 from api.middlewares.db_handlers import get_read_write_stockdb
 from api.middlewares.jwt_auth import get_jwt_payload_dependency
+from api.middlewares.query_builder import get_prepared_query, get_pagination
 
 
 load_dotenv()
@@ -24,13 +24,19 @@ bearer = HTTPBearer()
 @router.get("/")
 async def get_stocks(
     query: StockQueryTypeModel = Depends(get_prepared_query),
+    pagination: InputAddStockModel = Depends(get_pagination),
     _: Dict = Depends(get_jwt_payload_dependency),
 ):
     try:
         db = get_read_write_stockdb()
         collection = db["stocks"]
 
-        stocks = [flatten_object_id(doc) for doc in collection.find(query)]
+        stocks = [
+            flatten_object_id(doc)
+            for doc in collection.find(query)
+            .skip(pagination.skip)
+            .limit(pagination.per_page)
+        ]
         return {"stocks": stocks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -74,7 +80,7 @@ async def get_unique_names(
         collection = db["stocks"]
         return UniqueValuesHeaderTypeModel(
             # TODO: mongo splits the value by spaces -– escape it at upload time and modify the search accordingly
-            # pipeline = [ {"$match": query}, 
+            # pipeline = [ {"$match": query},
             # {"$group": {"_id": None, "distinct_values": {"$addToSet": "$name"}}}
             # ]
             message=f"Uniques values for column {column_name}",

@@ -150,3 +150,12 @@ class StockQueryTypeModel(BaseModel):
 
     year: Optional[IntervalMatchQueryTypeModel] = None
     price: Optional[IntervalMatchQueryTypeModel] = None
+
+
+class PaginationTypeBaseModel(BaseModel):
+    page: int = 1
+    per_page: int = 10
+
+    @property
+    def skip(self) -> int:
+        return (self.page - 1) * self.per_page
