@@ -31,9 +31,10 @@ class UniqueValuesHeaderTypeModel(BaseResponseTypeModel):
     per_page: int
     count: int
 
+
 class GetAllStocksTypeModel(BaseResponseTypeModel):
     stocks: List[Dict]
-    
+
     page: int
     per_page: int
     count: int
