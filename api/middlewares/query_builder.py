@@ -1,10 +1,9 @@
 from typing import Optional
 
-from api.datamodels.api_inputs import StockQueryTypeModel
+from api.datamodels.api_inputs import StockQueryTypeModel, PaginationTypeBaseModel
 
-from typing import Annotated, Dict, List
-from fastapi.security import HTTPBearer
-from fastapi import APIRouter, UploadFile, HTTPException, Depends, File, Query
+from typing import List
+from fastapi import Query
 
 
 def get_prepared_query(
@@ -44,3 +43,18 @@ def get_prepared_query(
             pass
 
     return my_query
+
+
+def get_pagination(
+    page: Optional[int] = None,
+    per_page: Optional[int] = None,
+):
+
+    json_data = {}
+
+    if page is not None:
+        json_data["page"] = page
+    if per_page is not None:
+        json_data["per_page"] = per_page
+
+    return PaginationTypeBaseModel(**json_data)

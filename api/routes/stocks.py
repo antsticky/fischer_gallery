@@ -6,13 +6,21 @@ from dotenv import load_dotenv
 
 
 from api.misc.file_handler import FileHandler
-from api.datamodels.api_inputs import InputAddStockModel, StockQueryTypeModel
-from api.datamodels.api_responses import InsertTypeModel, UniqueValuesHeaderTypeModel
+from api.datamodels.api_responses import (
+    InsertTypeModel,
+    UniqueValuesHeaderTypeModel,
+    GetAllStocksTypeModel,
+)
+from api.datamodels.api_inputs import (
+    InputAddStockModel,
+    StockQueryTypeModel,
+    PaginationTypeBaseModel,
+)
 
 from api.misc.json_converter import flatten_object_id
-from api.middlewares.query_builder import get_prepared_query
 from api.middlewares.db_handlers import get_read_write_stockdb
 from api.middlewares.jwt_auth import get_jwt_payload_dependency
+from api.middlewares.query_builder import get_prepared_query, get_pagination
 
 
 load_dotenv()
@@ -24,14 +32,29 @@ bearer = HTTPBearer()
 @router.get("/")
 async def get_stocks(
     query: StockQueryTypeModel = Depends(get_prepared_query),
+    pagination: PaginationTypeBaseModel = Depends(get_pagination),
     _: Dict = Depends(get_jwt_payload_dependency),
-):
+) -> GetAllStocksTypeModel:
     try:
         db = get_read_write_stockdb()
         collection = db["stocks"]
 
-        stocks = [flatten_object_id(doc) for doc in collection.find(query)]
-        return {"stocks": stocks}
+        total_count = collection.count_documents(query)
+
+        stocks = [
+            flatten_object_id(doc)
+            for doc in collection.find(query)
+            .skip(pagination.skip)
+            .limit(pagination.per_page)
+        ]
+
+        return GetAllStocksTypeModel(
+            message=f"Stocks for query: {query}",
+            stocks=stocks,
+            count=total_count,
+            page=pagination.page,
+            per_page=pagination.per_page,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -67,15 +90,25 @@ async def add_stock(
 async def get_unique_names(
     column_name: str,
     query: StockQueryTypeModel = Depends(get_prepared_query),
+    pagination: PaginationTypeBaseModel = Depends(get_pagination),
     _: Dict = Depends(get_jwt_payload_dependency),
 ) -> UniqueValuesHeaderTypeModel:
     try:
         db = get_read_write_stockdb()
         collection = db["stocks"]
+
+        unique_values = collection.distinct(column_name, query)
+
         return UniqueValuesHeaderTypeModel(
             # TODO: mongo splits the value by spaces -– escape it at upload time and modify the search accordingly
+            # pipeline = [ {"$match": query},
+            # {"$group": {"_id": None, "distinct_values": {"$addToSet": "$name"}}}
+            # ]
             message=f"Uniques values for column {column_name}",
-            unique_values=collection.distinct(column_name, query),
+            unique_values=unique_values[pagination.start_index : pagination.end_index],
+            page=pagination.page,
+            per_page=pagination.per_page,
+            count=len(unique_values),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
