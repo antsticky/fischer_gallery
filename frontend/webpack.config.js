@@ -12,11 +12,13 @@ module.exports = {
     publicPath: "/", // Ensure this is set to the root path
   },
   devServer: {
-    static: path.join(__dirname, `src/public`),
-    compress: true,
+    host: '0.0.0.0',
     port: PORT,
-    historyApiFallback: true, // This allows for client-side routing
-    hot: true, // Enable hot reloading
+    static: {
+      directory: path.join(__dirname, 'src/public'),
+    },
+    historyApiFallback: true,
+    hot: true,
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -60,6 +62,6 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: [".js", ".jsx", '.ts', '.tsx'],
+    extensions: [".js", ".jsx", ".ts", ".tsx"],
   },
 };
