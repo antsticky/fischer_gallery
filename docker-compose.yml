@@ -29,14 +29,16 @@ services:
   frontend:
     container_name: gallery_frontend
     image: node:20-alpine
-    restart: unless-stopped
+    restart: always
     volumes:
       - ./frontend:/frontend
     expose:
       - ${FRONTEND_PORT}
-    working_dir: /frontend  # Set the working directory to the project root
-    command: npm start -- --port=${FRONTEND_PORT}
+    working_dir: /frontend
+    command: sh -c "if [ ! -d node_modules ]; then npm install; fi && npm run start -- --port=${FRONTEND_PORT}"
     env_file: .env
+    environment:
+      - WATCHPACK_POLLING=true
     networks:
       - dev
 
@@ -45,7 +47,7 @@ services:
     restart: always
     container_name: gallery_nginx
     ports:
-      - ${NGINX_PORT}:${NGINX_PORT}  # Expose Nginx on the host
+      - "${NGINX_PORT}:${NGINX_PORT}"  # Expose Nginx on the host
     volumes:
       - ./nginx:/etc/nginx/templates  # Use a custom Nginx configuration
     depends_on:
