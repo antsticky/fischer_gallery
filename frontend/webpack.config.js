@@ -1,8 +1,8 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
 const args = process.argv.slice(2);
-const portArg = args.find(arg => arg.includes('--port='));
-const PORT = portArg ? parseInt(portArg.split('=')[1], 10) : 3000;
+const portArg = args.find((arg) => arg.includes("--port="));
+const PORT = portArg ? parseInt(portArg.split("=")[1], 10) : 3000;
 
 module.exports = {
   entry: `./src/index.tsx`,
@@ -12,10 +12,10 @@ module.exports = {
     publicPath: "/", // Ensure this is set to the root path
   },
   devServer: {
-    host: '0.0.0.0',
+    host: "0.0.0.0",
     port: PORT,
     static: {
-      directory: path.join(__dirname, 'src/public'),
+      directory: path.join(__dirname, "src/public"),
     },
     historyApiFallback: true,
     hot: true,

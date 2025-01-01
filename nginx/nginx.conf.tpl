@@ -1,5 +1,5 @@
 upstream frontend {
-  server frontend:3000;
+  server frontend:${FRONTEND_PORT};
 }
 
 upstream mongodb {
@@ -7,7 +7,7 @@ upstream mongodb {
 }
 
 server {
-  listen 80;
+  listen ${NGINX_PORT};
 
   location / {
     proxy_pass http://frontend;
