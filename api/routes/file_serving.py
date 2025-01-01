@@ -1,10 +1,11 @@
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi import HTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 from api.middlewares.jwt_auth import validate_jwt_token
 
 bearer = HTTPBearer()
