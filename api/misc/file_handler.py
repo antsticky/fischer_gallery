@@ -21,7 +21,7 @@ class FileHandler:
             file_path = (
                 FILE_ROOT_FOLDER
                 / file_sub_path
-                / f"{file.filename}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                / f"{Path(file.filename).stem}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{Path(file.filename).suffix}"
             )
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
