@@ -2,22 +2,26 @@ import os
 import jwt
 
 from pymongo import database
-from fastapi import HTTPException, HTTPException, status
+
 from fastapi.security import (
     HTTPBasic,
     HTTPBearer,
     HTTPBasicCredentials,
     HTTPAuthorizationCredentials,
 )
+from fastapi.responses import JSONResponse
+from fastapi import HTTPException, status
+
+from starlette.requests import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from fastapi import Depends
-
 
 from api.middlewares.db_handlers import get_read_userdb
 
 
-security = HTTPBasic()
 bearer = HTTPBearer()
+security = HTTPBasic()
 
 algorithm = "HS256"
 secret = os.getenv("JWT_SECRET_KEY")
@@ -69,3 +73,31 @@ def get_jwt_payload_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(bearer),
 ):
     return validate_jwt_token(credentials)
+
+
+class JWTAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        authorization: str = request.headers.get("Authorization")
+        if authorization:
+            try:
+                scheme, token = authorization.split()
+                if scheme.lower() != "bearer":
+                    raise HTTPException(
+                        status_code=401, detail="Invalid authentication scheme"
+                    )
+
+                credentials = HTTPAuthorizationCredentials(
+                    scheme="bearer", credentials=token
+                )
+
+                jwt_payload = validate_jwt_token(credentials)
+                request.state.jwt_payload = jwt_payload
+            except Exception as e:
+                return JSONResponse(status_code=401, content={"detail": str(e)})
+        else:
+            return JSONResponse(
+                status_code=401, content={"detail": "Authorization header missing"}
+            )
+
+        response = await call_next(request)
+        return response

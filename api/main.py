@@ -11,7 +11,6 @@ from api.misc.date_converter import human_readable_timedelta
 
 from api.routes.authentication import router as auth_router
 from api.routes.stocks import router as stocks_router
-from api.routes.file_serving import router as file_serving_router
 
 
 t0 = time()
@@ -30,13 +29,12 @@ async def health() -> HealthTypeModel:
     t1 = time()
     return HealthTypeModel(
         message=f"Up-and-running in the last {human_readable_timedelta(t1-t0)}",
-        uptime=t1 - t0,
+        uptime=round(t1 - t0, 2),
     )
 
 
 app.include_router(auth_router, prefix="/api/jwt", tags=["Authentication"])
 app.include_router(stocks_router, prefix="/api/stocks", tags=["Stocks"])
-app.mount("/api/stocks/files", file_serving_router)
 
 
 def run():
