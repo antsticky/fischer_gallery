@@ -1,6 +1,7 @@
 from typing import Annotated, Dict
 from fastapi.security import HTTPBearer
-from fastapi import APIRouter, UploadFile, HTTPException, Depends, File, Query
+from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter, UploadFile, HTTPException, Request, Depends, File, Query
 
 from dotenv import load_dotenv
 
@@ -27,13 +28,13 @@ load_dotenv()
 
 router = APIRouter()
 bearer = HTTPBearer()
+jwt_dependency = Depends(get_jwt_payload_dependency)
 
 
-@router.get("/")
+@router.get("/", dependencies=[jwt_dependency])
 async def get_stocks(
     query: StockQueryTypeModel = Depends(get_prepared_query),
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
-    _: Dict = Depends(get_jwt_payload_dependency),
 ) -> GetAllStocksTypeModel:
     try:
         db = get_read_write_stockdb()
@@ -86,12 +87,11 @@ async def add_stock(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{column_name}/unique_values")
+@router.get("/{column_name}/unique_values", dependencies=[jwt_dependency])
 async def get_unique_names(
     column_name: str,
     query: StockQueryTypeModel = Depends(get_prepared_query),
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
-    _: Dict = Depends(get_jwt_payload_dependency),
 ) -> UniqueValuesHeaderTypeModel:
     try:
         db = get_read_write_stockdb()
@@ -112,3 +112,11 @@ async def get_unique_names(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/stocks/files/{file_path:path}", dependencies=[jwt_dependency])
+async def serve_static_files(request: Request, file_path: str):
+    print("here")
+    return await StaticFiles(directory="files").get_response(
+        file_path, scope=request.scope
+    )
