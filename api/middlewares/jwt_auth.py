@@ -1,6 +1,9 @@
 import os
 import jwt
 
+from typing import List
+from functools import partial
+
 from pymongo import database
 
 from fastapi.security import (
@@ -9,11 +12,8 @@ from fastapi.security import (
     HTTPBasicCredentials,
     HTTPAuthorizationCredentials,
 )
-from fastapi.responses import JSONResponse
 from fastapi import HTTPException, status
 
-from starlette.requests import Request
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from fastapi import Depends
 
@@ -27,10 +27,21 @@ algorithm = "HS256"
 secret = os.getenv("JWT_SECRET_KEY")
 
 
-def validate_jwt_token(credentials: HTTPAuthorizationCredentials):
+def validate_jwt_token(
+    credentials: HTTPAuthorizationCredentials, required_role: List[str]
+):
     try:
         token = credentials.credentials
         payload = jwt.decode(token, secret, algorithms=[algorithm])
+
+        print(payload.get("role"))
+
+        if payload.get("role") not in required_role:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Not authorized, required permissions is {required_role}",
+            )
+
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(
@@ -71,33 +82,12 @@ def get_user_role(
 
 def get_jwt_payload_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(bearer),
+    required_role: List[str] = ["read", "write"],
 ):
-    return validate_jwt_token(credentials)
+    return validate_jwt_token(credentials=credentials, required_role=required_role)
 
 
-class JWTAuthMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        authorization: str = request.headers.get("Authorization")
-        if authorization:
-            try:
-                scheme, token = authorization.split()
-                if scheme.lower() != "bearer":
-                    raise HTTPException(
-                        status_code=401, detail="Invalid authentication scheme"
-                    )
-
-                credentials = HTTPAuthorizationCredentials(
-                    scheme="bearer", credentials=token
-                )
-
-                jwt_payload = validate_jwt_token(credentials)
-                request.state.jwt_payload = jwt_payload
-            except Exception as e:
-                return JSONResponse(status_code=401, content={"detail": str(e)})
-        else:
-            return JSONResponse(
-                status_code=401, content={"detail": "Authorization header missing"}
-            )
-
-        response = await call_next(request)
-        return response
+jwt_read_or_write_dependency = Depends(get_jwt_payload_dependency)
+jwt_write_dependency = Depends(
+    partial(get_jwt_payload_dependency, required_role=["write"])
+)
