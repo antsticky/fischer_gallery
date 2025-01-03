@@ -1,4 +1,6 @@
-from typing import Annotated, Dict
+from typing import Annotated
+from pymongo.collection import Collection
+
 from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from fastapi import APIRouter, UploadFile, HTTPException, Request, Depends, File, Query
@@ -19,32 +21,29 @@ from api.datamodels.api_inputs import (
 )
 
 from api.misc.json_converter import flatten_object_id
-from api.middlewares.db_handlers import get_read_write_stockdb
-from api.middlewares.jwt_auth import get_jwt_payload_dependency
 from api.middlewares.query_builder import get_prepared_query, get_pagination
+from api.middlewares.db_handlers import get_read_write_stockdb, get_read_stockdb
 
+from api.middlewares.jwt_auth import jwt_read_or_write_dependency, jwt_write_dependency
 
 load_dotenv()
 
 router = APIRouter()
 bearer = HTTPBearer()
-jwt_dependency = Depends(get_jwt_payload_dependency)
 
 
-@router.get("/", dependencies=[jwt_dependency])
+@router.get("/", dependencies=[jwt_read_or_write_dependency])
 async def get_stocks(
     query: StockQueryTypeModel = Depends(get_prepared_query),
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
+    stocks_read_collection: Collection = Depends(lambda: get_read_stockdb()["stocks"]),
 ) -> GetAllStocksTypeModel:
     try:
-        db = get_read_write_stockdb()
-        collection = db["stocks"]
-
-        total_count = collection.count_documents(query)
+        total_count = stocks_read_collection.count_documents(query)
 
         stocks = [
             flatten_object_id(doc)
-            for doc in collection.find(query)
+            for doc in stocks_read_collection.find(query)
             .skip(pagination.skip)
             .limit(pagination.per_page)
         ]
@@ -60,24 +59,19 @@ async def get_stocks(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/")
+@router.post("/", dependencies=[jwt_write_dependency])
 async def add_stock(
     input: Annotated[InputAddStockModel, Query()],
     stock_img: UploadFile = File(...),
-    payload: Dict = Depends(get_jwt_payload_dependency),
+    stocks_read_write_collection: Collection = Depends(
+        lambda: get_read_write_stockdb()["stocks"]
+    ),
 ) -> InsertTypeModel:
-
-    if "write" not in payload.get("role"):
-        raise HTTPException(status_code=401, detail="No write permission")
-
     FileHandler.validate_file(stock_img)
     file_path = await FileHandler.save_file(stock_img, input.stock_type)
 
-    db = get_read_write_stockdb()
-    collection = db["stocks"]
-
     try:
-        result = collection.insert_one(
+        result = stocks_read_write_collection.insert_one(
             {**input.model_dump(), "file_path": str(file_path)}
         )
         return InsertTypeModel(
@@ -87,17 +81,15 @@ async def add_stock(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{column_name}/unique_values", dependencies=[jwt_dependency])
+@router.get("/{column_name}/unique_values", dependencies=[jwt_read_or_write_dependency])
 async def get_unique_names(
     column_name: str,
     query: StockQueryTypeModel = Depends(get_prepared_query),
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
+    stocks_read_collection: Collection = Depends(lambda: get_read_stockdb()["stocks"]),
 ) -> UniqueValuesHeaderTypeModel:
     try:
-        db = get_read_write_stockdb()
-        collection = db["stocks"]
-
-        unique_values = collection.distinct(column_name, query)
+        unique_values = stocks_read_collection.distinct(column_name, query)
 
         return UniqueValuesHeaderTypeModel(
             # TODO: mongo splits the value by spaces -– escape it at upload time and modify the search accordingly
@@ -114,9 +106,10 @@ async def get_unique_names(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/stocks/files/{file_path:path}", dependencies=[jwt_dependency])
+@router.get(
+    "/api/stocks/files/{file_path:path}", dependencies=[jwt_read_or_write_dependency]
+)
 async def serve_static_files(request: Request, file_path: str):
-    print("here")
     return await StaticFiles(directory="files").get_response(
         file_path, scope=request.scope
     )

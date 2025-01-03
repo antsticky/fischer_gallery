@@ -1,8 +1,6 @@
 from typing import List, Dict
 from pydantic import BaseModel
 
-from api.datamodels.token import TokenPayloadTypeModel
-
 
 class BaseResponseTypeModel(BaseModel):
     message: str
@@ -20,6 +18,11 @@ class GetTokenTypeModel(BaseResponseTypeModel):
     token: str
 
 
+class TokenPayloadTypeModel(BaseModel):
+    role: str
+    exp: float
+
+
 class ValidateTokenTypeModel(BaseResponseTypeModel):
     payload: TokenPayloadTypeModel
 
@@ -31,7 +34,7 @@ class PaginationResponseTypeModel(BaseModel):
 
 
 class UniqueValuesHeaderTypeModel(BaseResponseTypeModel, PaginationResponseTypeModel):
-    unique_values: list
+    unique_values: List
 
 
 class GetAllStocksTypeModel(BaseResponseTypeModel, PaginationResponseTypeModel):
