@@ -13,8 +13,14 @@ from dotenv import load_dotenv
 
 from typing import Dict
 
+from api.misc.custom_logger import DBLogger
 from api.datamodels.api_responses import GetTokenTypeModel, ValidateTokenTypeModel
-from api.middlewares.jwt_auth import get_user_role, get_jwt_payload_dependency
+
+from api.middlewares.jwt_auth import (
+    get_user_name,
+    get_user_role,
+    get_jwt_payload_dependency,
+)
 
 
 router = APIRouter()
@@ -30,13 +36,18 @@ secret = os.getenv("JWT_SECRET_KEY")
 
 
 @router.get("/")
-def get_jwt_token(user_role: str = Depends(get_user_role)) -> GetTokenTypeModel:
+def get_jwt_token(
+    username: str = Depends(get_user_name),
+    user_role: str = Depends(get_user_role),
+) -> GetTokenTypeModel:
     payload = {
         "role": user_role,
         "exp": datetime.now(timezone.utc) + timedelta(seconds=expire_in_seconds),
+        "username": username,
     }
     token = jwt.encode(payload, secret, algorithm)
 
+    DBLogger.info(message=f"Token is issued for {username}")
     return GetTokenTypeModel(
         message="Token is issued",
         token=token,

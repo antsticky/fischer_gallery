@@ -19,6 +19,7 @@ class GetTokenTypeModel(BaseResponseTypeModel):
 
 
 class TokenPayloadTypeModel(BaseModel):
+    username: str
     role: str
     exp: float
 
