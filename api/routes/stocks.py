@@ -7,7 +7,7 @@ from fastapi import APIRouter, UploadFile, HTTPException, Request, Depends, File
 
 from dotenv import load_dotenv
 
-
+from api.misc.custom_logger import DBLogger
 from api.misc.file_handler import FileHandler
 from api.datamodels.api_responses import (
     InsertTypeModel,
@@ -38,6 +38,7 @@ async def get_stocks(
     pagination: PaginationTypeBaseModel = Depends(get_pagination),
     stocks_read_collection: Collection = Depends(lambda: get_read_stockdb()["stocks"]),
 ) -> GetAllStocksTypeModel:
+    DBLogger.info(f"Stock getter endpoint was called with query {query}")
     try:
         total_count = stocks_read_collection.count_documents(query)
 
@@ -48,6 +49,7 @@ async def get_stocks(
             .limit(pagination.per_page)
         ]
 
+        DBLogger.info(f"Stock getter endpoint found {total_count} for query {query}")
         return GetAllStocksTypeModel(
             message=f"Stocks for query: {query}",
             stocks=stocks,
@@ -56,6 +58,7 @@ async def get_stocks(
             per_page=pagination.per_page,
         )
     except Exception as e:
+        DBLogger.error(f"Stock getter endpoint was failed for {query} with {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -69,15 +72,18 @@ async def add_stock(
 ) -> InsertTypeModel:
     FileHandler.validate_file(stock_img)
     file_path = await FileHandler.save_file(stock_img, input.stock_type)
+    DBLogger.info(f"Stock post endpoint saved file to {file_path}")
 
     try:
         result = stocks_read_write_collection.insert_one(
             {**input.model_dump(), "file_path": str(file_path)}
         )
+        DBLogger.info(f"Stock post endpoint inserted entry with {result.inserted_id}")
         return InsertTypeModel(
             message="Entry added successfully", object_id=str(result.inserted_id)
         )
     except Exception as e:
+        DBLogger.error(f"Stock post endpoint was failed with error {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -89,6 +95,9 @@ async def get_unique_names(
     stocks_read_collection: Collection = Depends(lambda: get_read_stockdb()["stocks"]),
 ) -> UniqueValuesHeaderTypeModel:
     try:
+        DBLogger.info(
+            f"Stock header endpoint was called with {query} and {column_name}"
+        )
         unique_values = stocks_read_collection.distinct(column_name, query)
 
         return UniqueValuesHeaderTypeModel(
@@ -103,6 +112,9 @@ async def get_unique_names(
             count=len(unique_values),
         )
     except Exception as e:
+        DBLogger.error(
+            f"Stock header endpoint was failed with error {e} for {query} and {column_name}"
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -110,6 +122,7 @@ async def get_unique_names(
     "/api/stocks/files/{file_path:path}", dependencies=[jwt_read_or_write_dependency]
 )
 async def serve_static_files(request: Request, file_path: str):
+    DBLogger.info(f"File serving was called with {file_path}")
     return await StaticFiles(directory="files").get_response(
         file_path, scope=request.scope
     )

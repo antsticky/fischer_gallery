@@ -17,6 +17,8 @@ from fastapi import HTTPException, status
 
 from fastapi import Depends
 
+from api.misc.custom_logger import DBLogger
+
 from api.middlewares.db_handlers import get_read_userdb
 
 
@@ -34,20 +36,24 @@ def validate_jwt_token(
         token = credentials.credentials
         payload = jwt.decode(token, secret, algorithms=[algorithm])
 
-        print(payload.get("role"))
-
         if payload.get("role") not in required_role:
+            DBLogger.warning(
+                message=f"User role was insufficient required role was {required_role} while user role was {payload.get('role')}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Not authorized, required permissions is {required_role}",
             )
 
+        DBLogger.info(message=f"Token was validated for user {payload.get('username')}")
         return payload
     except jwt.ExpiredSignatureError:
+        DBLogger.warning(message=f"Expired token {credentials.credentials} was sent")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
         )
     except jwt.InvalidTokenError:
+        DBLogger.warning(message=f"Invalid token {credentials.credentials} was sent")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
@@ -57,6 +63,9 @@ def validate_user(credentials: HTTPAuthorizationCredentials, db: database.Databa
     user = db["usersdb"].find_one({"username": credentials.username})
 
     if user is None:
+        DBLogger.warning(
+            message=f"User {credentials.username} could not validated since was not found in db"
+        )
         HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"User {credentials.username} not in db",
@@ -64,13 +73,23 @@ def validate_user(credentials: HTTPAuthorizationCredentials, db: database.Databa
         )
 
     if user and user["password"] == credentials.password:
+        DBLogger.info(message=f"User {credentials.username} was successfully validated")
         return user["role"]
 
+    DBLogger.warning(
+        message=f"User {credentials.username} could not validated since bad password"
+    )
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Incorrect username or password",
         headers={"WWW-Authenticate": "Basic"},
     )
+
+
+def get_user_name(
+    credentials: HTTPBasicCredentials = Depends(security),
+):
+    return credentials.username
 
 
 def get_user_role(
